@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SmartBill - Shopping Bill & Discount System</title>
+<style>
+  :root{
+    --bg:#06122b; --panel:#0c1f45; --panel2:#102a5c; --line:#1c3a78;
+    --text:#e6eeff; --muted:#8fa6d6; --accent:#3b82f6; --accent2:#60a5fa;
+    --good:#34d399; --bad:#f87171;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',Tahoma,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+  header{background:linear-gradient(90deg,#0a1a3d,#123273);padding:18px 28px;border-bottom:2px solid var(--accent);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+  header h1{font-size:1.5rem;letter-spacing:.5px}
+  header span{color:var(--muted);font-size:.9rem}
+  main{max-width:1200px;margin:24px auto;padding:0 16px;display:grid;gap:20px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  @media(max-width:850px){.grid2{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;box-shadow:0 4px 18px rgba(0,0,0,.35)}
+  .card h2{font-size:1.1rem;margin-bottom:14px;color:var(--accent2);border-bottom:1px solid var(--line);padding-bottom:8px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .row3{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  @media(max-width:600px){.row,.row3{grid-template-columns:1fr 1fr}}
+  label{display:block;font-size:.8rem;color:var(--muted);margin:10px 0 4px}
+  input,select{width:100%;padding:9px 11px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;color:var(--text);font-size:.95rem;outline:none}
+  input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(59,130,246,.3)}
+  button{background:var(--accent);color:#fff;border:none;padding:10px 18px;border-radius:8px;font-size:.95rem;cursor:pointer;margin-top:14px;transition:.2s}
+  button:hover{background:#2563eb;transform:translateY(-1px)}
+  button.ghost{background:transparent;border:1px solid var(--accent);color:var(--accent2)}
+  button.danger{background:#b91c1c;padding:5px 10px;margin:0;font-size:.8rem}
+  .btns{display:flex;gap:10px;flex-wrap:wrap}
+  table{width:100%;border-collapse:collapse;margin-top:10px;font-size:.88rem}
+  th,td{padding:9px 8px;text-align:left;border-bottom:1px solid var(--line)}
+  th{background:var(--panel2);color:var(--accent2);font-weight:600}
+  .scroll{overflow-x:auto}
+  .sum{display:grid;gap:8px;margin-top:14px}
+  .sum div{display:flex;justify-content:space-between;padding:8px 12px;background:var(--panel2);border-radius:8px}
+  .sum .grand{background:var(--accent);font-weight:700;font-size:1.1rem}
+  .good{color:var(--good)} .bad{color:var(--bad)}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px}
+  @media(max-width:750px){.stats{grid-template-columns:1fr 1fr}}
+  .stat{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:14px;text-align:center}
+  .stat small{color:var(--muted);display:block;margin-bottom:6px}
+  .stat b{font-size:1.25rem}
+  .empty{color:var(--muted);text-align:center;padding:14px}
+  footer{text-align:center;color:var(--muted);padding:20px;font-size:.8rem}
+  @media print{
+    body{background:#fff;color:#000}
+    header,.no-print,footer{display:none!important}
+    .card{box-shadow:none;border:1px solid #000;background:#fff;color:#000}
+    th,td,.sum div{background:#fff!important;color:#000!important}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🛒 SmartBill — Shopping Bill &amp; Discount System</h1>
+  <span id="todayLabel"></span>
+</header>
+
+<main>
+
+  <!-- STEP 1 & 2: CUSTOMER + PRODUCT -->
+  <div class="grid2 no-print">
+    <section class="card">
+      <h2>1. Customer Details</h2>
+      <label>Customer Name *</label>
+      <input id="cName" placeholder="e.g. Priya Sharma">
+      <div class="row">
+        <div><label>Phone</label><input id="cPhone" placeholder="10-digit number" maxlength="10"></div>
+        <div><label>Email</label><input id="cEmail" type="email" placeholder="name@mail.com"></div>
+      </div>
+      <label>Address</label>
+      <input id="cAddress" placeholder="Street, City">
+      <div class="row">
+        <div><label>Bill Date</label><input id="billDate" type="date"></div>
+        <div>
+          <label>Membership (auto discount)</label>
+          <select id="tier">
+            <option value="0">Regular – 0%</option>
+            <option value="5">Silver – 5%</option>
+            <option value="10">Gold – 10%</option>
+            <option value="15">Platinum – 15%</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>2. Product Details</h2>
+      <label>Product Name</label>
+      <input id="pName" placeholder="e.g. Wireless Mouse">
+      <div class="row3">
+        <div><label>Quantity</label><input id="pQty" type="number" min="1" value="1"></div>
+        <div><label>Cost Price (₹)</label><input id="pCost" type="number" min="0" step="0.01"></div>
+        <div><label>Selling Price (₹)</label><input id="pPrice" type="number" min="0" step="0.01"></div>
+        <div><label>Category</label>
+          <select id="pCat">
+            <option>Grocery</option><option>Electronics</option><option>Clothing</option>
+            <option>Stationery</option><option>Other</option>
+          </select>
+        </div>
+      </div>
+      <button onclick="addItem()">+ Add Product to Bill</button>
+    </section>
+  </div>
+
+  <!-- STEP 3: BILL -->
+  <section class="card">
+    <h2>3. Current Bill <span id="billNo" style="float:right;color:var(--muted);font-size:.85rem"></span></h2>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>#</th><th>Product</th><th>Category</th><th>Qty</th><th>Cost</th><th>Price</th><th>Total</th><th class="no-print"></th></tr></thead>
+        <tbody id="itemBody"></tbody>
+      </table>
+    </div>
+
+    <div class="grid2 no-print" style="margin-top:6px">
+      <div>
+        <label>Extra Discount % (added on top of membership)</label>
+        <input id="extraDisc" type="number" min="0" max="100" value="0">
+      </div>
+      <div class="row">
+        <div>
+          <label>GST %</label>
+          <select id="gst"><option value="0">0%</option><option value="5">5%</option><option value="12">12%</option><option value="18" selected>18%</option><option value="28">28%</option></select>
+        </div>
+        <div>
+          <label>Payment Mode</label>
+          <select id="payMode"><option>Cash</option><option>UPI</option><option>Card</option></select>
+        </div>
+      </div>
+    </div>
+
+    <div class="sum">
+      <div><span>Subtotal</span><b id="sSub">₹0.00</b></div>
+      <div><span>Total Discount (<span id="sDiscPct">0</span>%)</span><b class="bad" id="sDisc">- ₹0.00</b></div>
+      <div><span>Amount After Discount</span><b id="sTaxable">₹0.00</b></div>
+      <div><span>GST</span><b id="sGst">₹0.00</b></div>
+      <div class="grand"><span>Grand Total</span><b id="sGrand">₹0.00</b></div>
+      <div><span>Profit on this bill</span><b class="good" id="sProfit">₹0.00</b></div>
+      <div><span>Profit Margin</span><b class="good" id="sMargin">0%</b></div>
+    </div>
+
+    <div class="btns no-print">
+      <button onclick="saveBill()">💾 Save Bill</button>
+      <button class="ghost" onclick="window.print()">🖨 Print Bill</button>
+      <button class="ghost" onclick="clearBill()">Clear</button>
+    </div>
+  </section>
+
+  <!-- STEP 4: MONTHLY DASHBOARD -->
+  <section class="card no-print">
+    <h2>4. Monthly Income &amp; Profit Dashboard</h2>
+    <label style="max-width:220px">Select Month</label>
+    <input id="monthPick" type="month" style="max-width:220px" onchange="renderDashboard()">
+    <div class="stats">
+      <div class="stat"><small>Bills</small><b id="dBills">0</b></div>
+      <div class="stat"><small>Monthly Income</small><b id="dIncome">₹0.00</b></div>
+      <div class="stat"><small>Total Profit</small><b class="good" id="dProfit">₹0.00</b></div>
+      <div class="stat"><small>Profit % of Income</small><b class="good" id="dPct">0%</b></div>
+    </div>
+    <div class="stats" style="grid-template-columns:1fr 1fr">
+      <div class="stat"><small>This month's share of all-time income</small><b id="dShare">0%</b></div>
+      <div class="stat"><small>Total Discount Given</small><b class="bad" id="dDisc">₹0.00</b></div>
+    </div>
+
+    <h2 style="margin-top:22px">Month-wise Summary</h2>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Month</th><th>Bills</th><th>Income</th><th>Profit</th><th>Profit %</th><th>Share of Total Income</th></tr></thead>
+        <tbody id="monthBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- STEP 5: HISTORY -->
+  <section class="card no-print">
+    <h2>5. Saved Bills (Sales History)</h2>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Bill No</th><th>Date</th><th>Customer</th><th>Phone</th><th>Payment</th><th>Discount</th><th>Grand Total</th><th>Profit</th><th></th></tr></thead>
+        <tbody id="histBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+<footer>SmartBill · College Project · Data is stored in your browser (localStorage)</footer>
+
+<script>
+/* ================= DATA ================= */
+const KEY = 'smartbill_sales_v1';
+let items = [];
+let sales = JSON.parse(localStorage.getItem(KEY) || '[]');
+
+const $ = id => document.getElementById(id);
+const money = n => '₹' + (Number(n) || 0).toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2});
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ================= INIT ================= */
+function init(){
+  const today = new Date().toISOString().slice(0,10);
+  $('billDate').value = today;
+  $('monthPick').value = today.slice(0,7);
+  $('todayLabel').textContent = new Date().toDateString();
+  $('billNo').textContent = 'Bill No: ' + nextBillNo();
+  ['extraDisc','gst','tier'].forEach(id => $(id).addEventListener('input', calc));
+  renderItems(); renderHistory(); renderDashboard();
+}
+function nextBillNo(){ return 'BILL-' + String(sales.length + 1).padStart(4,'0'); }
+
+/* ================= PRODUCTS ================= */
+function addItem(){
+  const name = $('pName').value.trim();
+  const qty = parseInt($('pQty').value);
+  const cost = parseFloat($('pCost').value);
+  const price = parseFloat($('pPrice').value);
+  if(!name) return alert('Enter product name');
+  if(!(qty > 0)) return alert('Quantity must be at least 1');
+  if(isNaN(cost) || cost < 0) return alert('Enter a valid cost price');
+  if(isNaN(price) || price < 0) return alert('Enter a valid selling price');
+  items.push({name, qty, cost, price, cat: $('pCat').value});
+  ['pName','pCost','pPrice'].forEach(id => $(id).value = '');
+  $('pQty').value = 1;
+  renderItems();
+}
+function removeItem(i){ items.splice(i,1); renderItems(); }
+
+function renderItems(){
+  const body = $('itemBody');
+  if(!items.length){
+    body.innerHTML = '<tr><td colspan="8" class="empty">No products added yet</td></tr>';
+  } else {
+    body.innerHTML = items.map((it,i) => `
+      <tr>
+        <td>${i+1}</td><td>${esc(it.name)}</td><td>${esc(it.cat)}</td><td>${it.qty}</td>
+        <td>${money(it.cost)}</td><td>${money(it.price)}</td><td>${money(it.qty*it.price)}</td>
+        <td class="no-print"><button class="danger" onclick="removeItem(${i})">✕</button></td>
+      </tr>`).join('');
+  }
+  calc();
+}
+
+/* ================= CALCULATION ================= */
+function compute(){
+  const subtotal = items.reduce((s,it) => s + it.qty*it.price, 0);
+  const costTotal = items.reduce((s,it) => s + it.qty*it.cost, 0);
+  let discPct = (parseFloat($('tier').value)||0) + (parseFloat($('extraDisc').value)||0);
+  discPct = Math.min(Math.max(discPct,0),100);
+  const discAmt = subtotal * discPct / 100;
+  const taxable = subtotal - discAmt;                    // this is the shop's income
+  const gstPct = parseFloat($('gst').value) || 0;
+  const gstAmt = taxable * gstPct / 100;                 // GST goes to government, not profit
+  const grand = taxable + gstAmt;
+  const profit = taxable - costTotal;
+  const margin = taxable > 0 ? profit / taxable * 100 : 0;
+  return {subtotal, costTotal, discPct, discAmt, taxable, gstPct, gstAmt, grand, profit, margin};
+}
+function calc(){
+  const r = compute();
+  $('sSub').textContent = money(r.subtotal);
+  $('sDiscPct').textContent = r.discPct.toFixed(1);
+  $('sDisc').textContent = '- ' + money(r.discAmt);
+  $('sTaxable').textContent = money(r.taxable);
+  $('sGst').textContent = money(r.gstAmt);
+  $('sGrand').textContent = money(r.grand);
+  $('sProfit').textContent = money(r.profit);
+  $('sProfit').className = r.profit >= 0 ? 'good' : 'bad';
+  $('sMargin').textContent = r.margin.toFixed(2) + '%';
+  $('sMargin').className = r.margin >= 0 ? 'good' : 'bad';
+}
+
+/* ================= SAVE / CLEAR ================= */
+function saveBill(){
+  const name = $('cName').value.trim();
+  if(!name) return alert('Please enter the customer name');
+  if(!items.length) return alert('Add at least one product');
+  const phone = $('cPhone').value.trim();
+  if(phone && !/^\d{10}$/.test(phone)) return alert('Phone number must be 10 digits');
+  const r = compute();
+  sales.push({
+    billNo: nextBillNo(), date: $('billDate').value || new Date().toISOString().slice(0,10),
+    customer: name, phone, email: $('cEmail').value.trim(), address: $('cAddress').value.trim(),
+    payMode: $('payMode').value, items: JSON.parse(JSON.stringify(items)),
+    subtotal: r.subtotal, discPct: r.discPct, discAmt: r.discAmt, income: r.taxable,
+    gstAmt: r.gstAmt, grand: r.grand, profit: r.profit
+  });
+  localStorage.setItem(KEY, JSON.stringify(sales));
+  alert('Bill saved successfully!');
+  clearBill(true);
+  renderHistory(); renderDashboard();
+}
+function clearBill(keepMsg){
+  items = [];
+  ['cName','cPhone','cEmail','cAddress','extraDisc'].forEach(id => $(id).value = id==='extraDisc' ? 0 : '');
+  $('tier').value = 0;
+  $('billNo').textContent = 'Bill No: ' + nextBillNo();
+  renderItems();
+}
+
+/* ================= HISTORY ================= */
+function renderHistory(){
+  const body = $('histBody');
+  if(!sales.length){ body.innerHTML = '<tr><td colspan="9" class="empty">No bills saved yet</td></tr>'; return; }
+  body.innerHTML = sales.slice().reverse().map(s => `
+    <tr>
+      <td>${esc(s.billNo)}</td><td>${esc(s.date)}</td><td>${esc(s.customer)}</td><td>${esc(s.phone||'-')}</td>
+      <td>${esc(s.payMode)}</td><td>${s.discPct.toFixed(1)}% (${money(s.discAmt)})</td>
+      <td>${money(s.grand)}</td><td class="${s.profit>=0?'good':'bad'}">${money(s.profit)}</td>
+      <td><button class="danger" onclick="deleteSale('${s.billNo}')">Delete</button></td>
+    </tr>`).join('');
+}
+function deleteSale(no){
+  if(!confirm('Delete ' + no + '?')) return;
+  sales = sales.filter(s => s.billNo !== no);
+  localStorage.setItem(KEY, JSON.stringify(sales));
+  renderHistory(); renderDashboard();
+  $('billNo').textContent = 'Bill No: ' + nextBillNo();
+}
+
+/* ================= MONTHLY DASHBOARD ================= */
+function sumOf(list){
+  return list.reduce((a,s) => ({income:a.income+s.income, profit:a.profit+s.profit, disc:a.disc+s.discAmt}), {income:0,profit:0,disc:0});
+}
+function renderDashboard(){
+  const month = $('monthPick').value;
+  const monthSales = sales.filter(s => s.date.slice(0,7) === month);
+  const m = sumOf(monthSales), all = sumOf(sales);
+
+  $('dBills').textContent = monthSales.length;
+  $('dIncome').textContent = money(m.income);
+  $('dProfit').textContent = money(m.profit);
+  $('dPct').textContent = (m.income > 0 ? m.profit/m.income*100 : 0).toFixed(2) + '%';
+  $('dShare').textContent = (all.income > 0 ? m.income/all.income*100 : 0).toFixed(2) + '%';
+  $('dDisc').textContent = money(m.disc);
+
+  const months = [...new Set(sales.map(s => s.date.slice(0,7)))].sort().reverse();
+  $('monthBody').innerHTML = months.length ? months.map(mo => {
+    const list = sales.filter(s => s.date.slice(0,7) === mo), t = sumOf(list);
+    return `<tr><td>${mo}</td><td>${list.length}</td><td>${money(t.income)}</td>
+      <td class="${t.profit>=0?'good':'bad'}">${money(t.profit)}</td>
+      <td>${(t.income>0?t.profit/t.income*100:0).toFixed(2)}%</td>
+      <td>${(all.income>0?t.income/all.income*100:0).toFixed(2)}%</td></tr>`;
+  }).join('') : '<tr><td colspan="6" class="empty">No data yet</td></tr>';
+}
+
+init();
+</script>
+</body>
+</html>
